@@ -1,0 +1,10 @@
+Flask
+SQLAlchemy
+python-dotenv 
+pymysql
+alembic
+Flask-Migrate
+Flask-Bcrypt
+PyJWT
+brazilcep
+flasgger
