@@ -5,7 +5,7 @@ from config.funcoes import (
     listardados, dataHoraAtual, gerarToken, 
     validarToken, textoLimpo, validar_cpf, 
     formatar_cpf, dataAtualPtBR,formatar_telefone,
-    formatar_cep, gerarDadosToken, dataExtParaGravacao
+    formatar_cep, gerarDadosToken, dataExtParaGravacao, validar_data, dataFormatoGravacao
 )
 from models import User, Cliente, Endereco, Favorito
 from flask import request
@@ -155,7 +155,16 @@ class usuariosController():
             updateEndereco.cidade = data.get('cidade')
             updateEndereco.uf = data.get('uf')
             updateEndereco.updated_at = dataHoraAtual()
-            updateEndereco.titulo = data.get('titulo') if 'titulo' in data and data['titulo'] is not None else "Cadastro"
+            
+            if 'titulo' in data and data.get('titulo') is not None:
+                updateEndereco.titulo = data.get('titulo') if 'titulo' in data and data['titulo'] is not None else "Cadastro"
+
+            if 'complemento' in data and data.get('complemento') is not None:
+                updateEndereco.complemento = data.get('complemento')
+
+            if 'status' in data and data.get('status') is not None:
+                updateEndereco.status = data.get('status')
+                
             try:
                 db.session.commit()
                 return {'codigo': 1, 'mensagem': "Endereco atualizado com sucesso", 'id': updateEndereco.id}
@@ -473,3 +482,59 @@ class usuariosController():
         except Exception as e:
             return jsonException({'mensagem':"falha ao enviar",'erro':e})
        
+    def alterarDadosPessoais(self):
+        dadoToken = gerarDadosToken()
+
+        usuarioId = dadoToken['id']
+        dados = request.json
+        jsonDados = {}
+        if 'nome_completo' in dados and dados['nome_completo'] is not None:
+            jsonDados["nome_completo"] = dados['nome_completo']
+
+        if 'cpf' in dados and dados['cpf'] is not None:
+            cpf = textoLimpo(dados.get('cpf'))
+            try:
+                validar_cpf(cpf)
+                jsonDados["cpf"] = dados['cpf']
+                # Se o CPF for válido, faça as operações necessárias e retorne uma resposta apropriada
+            except Exception as e:
+                raise NotFound("cpf invalido")
+            
+        if 'dt_nascimento' in dados and dados['dt_nascimento'] is not None:
+            validar_data(dados['dt_nascimento'])
+            jsonDados["dt_nascimento"] = dados['dt_nascimento']
+            
+        if 'fone' in dados and dados['fone'] is not None:
+            jsonDados["fone"] = dados['fone']
+
+        buscarCliente = Cliente.query.filter_by(user_id=usuarioId)
+        if not buscarCliente.first():
+            raise NotFound("Cliente não encontrado!")
+        update = buscarCliente.update(jsonDados)
+
+        if not update:
+            raise NotFound("Falha ao alterar os dados")
+        try:
+            db.session.commit()
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            raise BadRequest("item nao favoritado") 
+            
+        dados = listardados([buscarCliente.first()])[0]
+        dados['nome'] = dados['nome_completo']
+        dados['email'] = dadoToken['email']
+        # dados['dt_nascimento'] = dataFormatoGravacao(str(dados['dt_nascimento']))
+
+        return jsonSuccess(dados)
+
+    def alterarEndereco(self):
+        dadoToken = gerarDadosToken()
+        usuarioId = dadoToken['id']
+        cadastroEndereco = self.cadastroEndereco(usuarioId)
+        if cadastroEndereco['codigo']!=1:
+            raise NotFound("falha ao alterar o endereco")
+        
+        buscaEndereco = Endereco.query.filter_by(cliente_id=usuarioId).first()
+        dados = listardados([buscaEndereco])[0]           
+
+        return jsonSuccess(dados)
