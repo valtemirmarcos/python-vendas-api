@@ -35,6 +35,14 @@ def init_routes(flask_app):
     def usuarios_consulta_cep():
         return usuarios_ctl.consultaCep()
 
+    @app.route('/usuarios/alterarDadosPessoais', methods=['POST'])
+    def alterar_dados_pessoais():
+        return usuarios_ctl.alterarDadosPessoais()
+
+    @app.route('/usuarios/alterarEndereco', methods=['POST'])
+    def alterar_endereco():
+        return usuarios_ctl.alterarEndereco()
+
     @app.route('/login', methods=['POST'])
     def usuarios_login():
         return usuarios_ctl.login()
@@ -50,3 +58,5 @@ def init_routes(flask_app):
     @app.route('/enviarEmail', methods=['POST'])
     def enviar_email():
         return usuarios_ctl.enviarEmail()
+
+

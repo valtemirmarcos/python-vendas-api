@@ -93,6 +93,21 @@ def dataAtualPtBRB(data):
     data_formatada = data_obj.strftime('%d/%m/%Y')
     return data_formatada
 
+def dataFormatoGravacao(data):
+    # Verificar se 'data' é um objeto datetime
+    if isinstance(data, datetime):
+        data_str = data.strftime('%Y-%m-%d')
+    else:
+        data_str = data
+
+    data_obj = datetime.strptime(data_str, '%Y-%m-%d')
+
+    # Converter a string para um objeto datetime
+    data_obj = datetime.strptime(data_str, '%Y-%m-%d')
+    # Formatar a data no formato desejado
+    data_formatada = data_obj.strftime('%Y-%m-%d')
+    return data_formatada
+
 def dataSHoraAtualPtBR(data):
     # Tentar converter a string para um objeto datetime, tratando data e hora
     try:
@@ -265,3 +280,11 @@ def dataExtParaGravacao(date_obj):
     data_datetime = datetime.strptime(data_string, "%a, %d %b %Y %H:%M:%S %Z")
     data_formatada = data_datetime.strftime("%Y-%m-%d")
     return jsonSuccess(data_formatada) 
+
+def validar_data(data_str):
+    try:
+        # Tenta converter a string para um objeto datetime
+        datetime.strptime(data_str, '%Y-%m-%d')
+        return True
+    except ValueError:
+        raise NotFound("data invalida")
