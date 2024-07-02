@@ -10,8 +10,11 @@ from rotas.mensagens import init_routes_mensagens
 from rotas.vendas import init_route_vendas
 from rotas.imgs import init_route_imagens
 from flasgger import Swagger, swag_from
+from flask_cors import CORS
+
 
 app = Flask(__name__)
+CORS(app)
 init_app(app)
 
 swagger = Swagger(app)
